@@ -3,7 +3,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import String, Date, Float, Table, ForeignKey, Column, Integer
-
+from flask_marshmallow import Marshmallow
 
 
 
@@ -16,7 +16,10 @@ class Base(DeclarativeBase):
 
 db = SQLAlchemy(model_class = Base)
 
+ma = Marshmallow()
+
 db.init_app(app)
+ma.init_app(app)
 
 ticket_mechanic = Table(
     'ticket_mechanic', 
@@ -36,6 +39,7 @@ class Customers(Base):
     phone: Mapped[str] = mapped_column(String(30), nullable=False)
     address: Mapped[str] = mapped_column(String(500), nullable=False)
 
+    services: Mapped[list['Services']] = relationship('Services', back_populates='customer')
 
 class Services(Base):
     __tablename__ = 'services'
@@ -47,7 +51,7 @@ class Services(Base):
     service_date: Mapped[date] = mapped_column(Date, nullable=False)
 
     mechanics: Mapped[list['Mechanics']] = relationship('Mechanics', secondary=ticket_mechanic, back_populates='services')
-
+    customer: Mapped['Customers'] = relationship('Customers', back_populates='services')
 
 
 class Mechanics(Base):
@@ -57,7 +61,7 @@ class Mechanics(Base):
     last_name: Mapped[str] = mapped_column(String(120), nullable=False)
     email: Mapped[str] = mapped_column(String(360), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String(120), nullable=False)
-    salary: Mapped[float] = mapped_column(Float(30), nullable=False)
+    salary: Mapped[float] = mapped_column(Float, nullable=False)
     address: Mapped[str] = mapped_column(String(500), nullable=False)
     
     services: Mapped[list['Services']] = relationship('Services', secondary=ticket_mechanic, back_populates='mechanics')
